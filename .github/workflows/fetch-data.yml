@@ -1,0 +1,28 @@
+name: Fetch Campaign Data
+
+on:
+  schedule:
+    - cron: '30 1 * * 1'  # Every Monday 7:00 AM IST (1:30 AM UTC)
+  workflow_dispatch:        # Also allows manual trigger anytime
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch Google Sheet CSV
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKy2Drl8f_C1VhISDaqE923s8X9-frlQuSc7Vm8C2bqgfXjZOz1vHtPZgx1vcTrns8f_FF6HjO8rlu/pub?gid=0&single=true&output=csv" \
+            -o data.csv \
+            --fail \
+            --silent \
+            --show-error
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data.csv
+          git diff --staged --quiet || git commit -m "Auto-update data $(date +'%Y-%m-%d')"
+          git push
