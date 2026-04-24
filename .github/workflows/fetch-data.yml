@@ -2,14 +2,19 @@ name: Fetch Campaign Data
 
 on:
   schedule:
-    - cron: '30 1 * * 1'  # Every Monday 7:00 AM IST (1:30 AM UTC)
-  workflow_dispatch:        # Also allows manual trigger anytime
+    - cron: '30 1 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch Google Sheet CSV
         run: |
@@ -18,11 +23,12 @@ jobs:
             --fail \
             --silent \
             --show-error
+          echo "Rows fetched: $(wc -l < data.csv)"
 
       - name: Commit and push
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data.csv
           git diff --staged --quiet || git commit -m "Auto-update data $(date +'%Y-%m-%d')"
           git push
